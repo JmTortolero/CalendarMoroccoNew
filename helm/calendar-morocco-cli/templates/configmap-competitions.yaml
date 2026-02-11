@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "calendar.fullname" . }}-competitions
+data:
+{{- range $id, $c := .Values.competitions }}
+{{- $content := index $.Values.competitionProperties $id }}
+{{- if $content }}
+  {{ $c.propertiesFileName }}: |-
+{{ $content | indent 4 }}
+{{- end }}
+{{- end }}

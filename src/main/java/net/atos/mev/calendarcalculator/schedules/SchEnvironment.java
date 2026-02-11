@@ -26,16 +26,34 @@ public class SchEnvironment {
 		return result;
 	}
 
+	public static SchEnvironment createFromProperties(Properties properties) {
+		SchEnvironment result = new SchEnvironment();
+		result.loadFromProperties(properties);
+		return result;
+	}
+
 	public void loadFromMasterFile() {
-		prop = ClassEnvLoader.loadFromMasterFile(masterFileProp);
-		start = readDate(prop.getProperty("start"));
-		end = readDate(prop.getProperty("end"));
+		Properties loadedProps = ClassEnvLoader.loadFromMasterFile(masterFileProp);
+		loadFromProperties(loadedProps);
+	}
+
+	public void loadFromProperties(Properties properties) {
+		prop = properties;
+		start = readDate(requireProperty("start"));
+		end = readDate(requireProperty("end"));
 		env = new Environment();
-		env.loadEnvironment(prop.getProperty("env"));
-		tour = Tournament.readFromLineWithAssignments(env, prop.getProperty("tournament"));
+		env.loadEnvironment(requireProperty("env"));
+		tour = Tournament.readFromLineWithAssignments(env, requireProperty("tournament"));
 		datesFile = prop.getProperty("datesFile");
-		resultsFolder = prop.getProperty("resultsFolder");
-		
+		resultsFolder = requireProperty("resultsFolder");
+	}
+
+	private String requireProperty(String key) {
+		String value = prop.getProperty(key);
+		if (value == null || value.isBlank()) {
+			throw new IllegalArgumentException("Missing required property: " + key);
+		}
+		return value;
 	}
 	
 	public static LocalDate readDate(String textDate) {

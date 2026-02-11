@@ -3,6 +3,8 @@ package net.atos.mev.calendar.controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/config")
 public class ConfigController {
+    private static final Logger log = LoggerFactory.getLogger(ConfigController.class);
 
     @GetMapping("/options")
     public Map<String, Object> getOptions() {
@@ -58,6 +61,7 @@ public class ConfigController {
         configOptions.add(option4);
         
         response.put("configOptions", configOptions);
+        log.info("Response de /api/config/options: {}", response);
         return response;
     }
 }

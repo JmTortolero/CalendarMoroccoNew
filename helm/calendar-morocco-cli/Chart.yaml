@@ -1,0 +1,6 @@
+apiVersion: v2
+name: calendar-morocco-cli
+description: Helm chart for calendar-morocco-cli backend
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "calendar.fullname" . }}
+  labels:
+    app: {{ include "calendar.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "calendar.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "calendar.name" . }}
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+              value: {{ .Values.calendar.config.springConfigDir | quote }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          volumeMounts:
+            - name: config-app
+              mountPath: /config
+              readOnly: true
+            - name: config-competitions
+              mountPath: /config/competitions
+              readOnly: true
+            - name: calendar-data
+              mountPath: {{ .Values.calendar.storage.baseDir | quote }}
+      volumes:
+        - name: config-app
+          configMap:
+            name: {{ include "calendar.fullname" . }}-app
+        - name: config-competitions
+          configMap:
+            name: {{ include "calendar.fullname" . }}-competitions
+        - name: calendar-data
+{{- if .Values.calendar.storage.pvc.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.calendar.storage.pvc.existingClaim }}{{ .Values.calendar.storage.pvc.existingClaim }}{{ else }}{{ include "calendar.fullname" . }}-data{{ end }}
+{{- else }}
+          emptyDir: {}
+{{- end }}

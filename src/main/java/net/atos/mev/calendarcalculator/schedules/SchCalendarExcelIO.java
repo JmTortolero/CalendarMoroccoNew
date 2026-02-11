@@ -3,6 +3,8 @@ package net.atos.mev.calendarcalculator.schedules;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
@@ -30,12 +32,23 @@ import net.atos.mev.calendarcalculator.Team;
 public class SchCalendarExcelIO {
 
 	public static SchCalendar loadFromExcel(SchEnvironment schEnv) {
-		SchCalendar result = new SchCalendar(schEnv);
 		try {
 			System.out.println("Reading excel " + schEnv.datesFile);
 			URL url = ClassLoader.getSystemResource(schEnv.datesFile);
-			FileInputStream inputStream;
-			inputStream = new FileInputStream(url.getFile());
+			if (url == null) {
+				throw new IllegalStateException("Excel file not found in classpath: " + schEnv.datesFile);
+			}
+			try (FileInputStream inputStream = new FileInputStream(url.getFile())) {
+				return loadFromExcel(inputStream, schEnv);
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException("Error loading excel from classpath: " + schEnv.datesFile, e);
+		}
+	}
+
+	public static SchCalendar loadFromExcel(InputStream inputStream, SchEnvironment schEnv) {
+		SchCalendar result = new SchCalendar(schEnv);
+		try {
 			Workbook workbook = WorkbookFactory.create(inputStream);
 			Sheet sheet = workbook.getSheetAt(0);
 			for (Row row : sheet) {
@@ -116,7 +129,7 @@ public class SchCalendarExcelIO {
 					}
 				}
 			}
-			inputStream.close();
+			workbook.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -259,11 +272,25 @@ public class SchCalendarExcelIO {
 
 	public static void matchdaysToExcel(SchCalendar calendar, String fileName, SchEnvironment schEnv) {
 		try {
+			File outputFile = new File(fileName);
+			File containingFolder = outputFile.getParentFile();
+			if(!containingFolder.exists()) {
+				containingFolder.mkdirs();
+			}
 
+			try (FileOutputStream outputStream = new FileOutputStream(outputFile)) {
+				matchdaysToExcel(calendar, outputStream, schEnv);
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void matchdaysToExcel(SchCalendar calendar, OutputStream outputStream, SchEnvironment schEnv) {
+		try {
 			XSSFWorkbook workbook = new XSSFWorkbook();
 			XSSFSheet sheet = workbook.createSheet("Calendar");
 			int rowCount = -1;
-
 
 			String[] headerLine = "Competition,Round,Weekday,Date,Hour,Domicile,Exterieur".split(",");
 			Row firstRow = sheet.createRow(++rowCount);
@@ -301,19 +328,10 @@ public class SchCalendarExcelIO {
 			}
 
 			sheet.setAutoFilter(CellRangeAddress.valueOf("A1:G"+rowCount));
-
-			File outputFile = new File(fileName);
-			File containingFolder = outputFile.getParentFile();
-			if(!containingFolder.exists()) {
-				containingFolder.mkdirs();
-			}
-
-			FileOutputStream outputStream = new FileOutputStream(outputFile);
 			workbook.write(outputStream);
-
 			workbook.close();
 		} catch(Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("Error writing calendar output excel", e);
 		}
 	}
 
