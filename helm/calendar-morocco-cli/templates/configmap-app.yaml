@@ -12,6 +12,8 @@ data:
         competitions-dir: {{ .Values.calendar.config.competitionsDir | quote }}
       storage:
         base-dir: {{ .Values.calendar.storage.baseDir | quote }}
+      results:
+        base-dir: {{ printf "%s/results" .Values.calendar.storage.baseDir | quote }}
       competitions:
 {{- range $id, $c := .Values.competitions }}
         {{ $id }}:
