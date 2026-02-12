@@ -1,11 +1,11 @@
-package net.atos.mev.calendar.service;
+package net.atos.mev.calendarcalculator.service;
 
 import java.io.InputStream;
 import java.util.Properties;
 
 import org.springframework.stereotype.Component;
 
-import net.atos.mev.calendar.engine.CalendarEngine;
+import net.atos.mev.calendarcalculator.engine.CalendarEngine;
 
 @Component
 public class ScheduleFacade {

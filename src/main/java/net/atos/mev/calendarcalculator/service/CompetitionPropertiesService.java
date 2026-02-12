@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.service;
+package net.atos.mev.calendarcalculator.service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,8 +17,8 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import net.atos.mev.calendar.config.CalendarCompetitionsProperties;
-import net.atos.mev.calendar.service.dto.CompetitionRuntimeOverridesDTO;
+import net.atos.mev.calendarcalculator.config.CalendarCompetitionsProperties;
+import net.atos.mev.calendarcalculator.service.dto.CompetitionRuntimeOverridesDTO;
 
 @Service
 public class CompetitionPropertiesService {

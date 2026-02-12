@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.service;
+package net.atos.mev.calendarcalculator.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import net.atos.mev.calendar.service.dto.CompetitionRuntimeOverridesDTO;
+import net.atos.mev.calendarcalculator.service.dto.CompetitionRuntimeOverridesDTO;
 
 @SpringBootTest
 class CompetitionPropertiesServiceTest {

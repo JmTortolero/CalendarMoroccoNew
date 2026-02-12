@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.controller;
+package net.atos.mev.calendarcalculator.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

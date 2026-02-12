@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.util;
+package net.atos.mev.calendarcalculator.util;
 
 /**
  * Clase de ejemplo con el método findMatch con MUCHO debug logging

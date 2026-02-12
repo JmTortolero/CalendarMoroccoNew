@@ -24,7 +24,7 @@ Este código es el que realmente genera el calendario hoy en día.
 
 ## Nueva arquitectura (Spring Boot)
 
-- **Paquete:** `net.atos.mev.calendar`
+- **Paquete:** `net.atos.mev.calendarcalculator`
 - **Arranque:** Spring Boot
 - **Uso:** Backend que consume el front-end
 

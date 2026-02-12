@@ -1,5 +1,6 @@
-package net.atos.mev.calendar;
+package net.atos.mev.calendarcalculator;
 
+ 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

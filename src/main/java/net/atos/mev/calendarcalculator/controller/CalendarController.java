@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.controller;
+package net.atos.mev.calendarcalculator.controller;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import net.atos.mev.calendar.service.CalendarGenerationService;
-import net.atos.mev.calendar.service.CompetitionCatalogService;
-import net.atos.mev.calendar.service.CompetitionExcelStorageService;
-import net.atos.mev.calendar.service.dto.CompetitionExcelFileDTO;
+import net.atos.mev.calendarcalculator.service.CalendarGenerationService;
+import net.atos.mev.calendarcalculator.service.CompetitionCatalogService;
+import net.atos.mev.calendarcalculator.service.CompetitionExcelStorageService;
+import net.atos.mev.calendarcalculator.service.dto.CompetitionExcelFileDTO;
 
 @RestController
 @RequestMapping("/api/calendar")

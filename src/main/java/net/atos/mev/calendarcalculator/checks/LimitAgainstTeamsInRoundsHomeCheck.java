@@ -2,7 +2,7 @@ package net.atos.mev.calendarcalculator.checks;
 
 import java.util.Arrays;
 
-import net.atos.mev.calendar.*;
+import net.atos.mev.calendarcalculator.*;
 import net.atos.mev.calendarcalculator.Environment;
 import net.atos.mev.calendarcalculator.Match;
 import net.atos.mev.calendarcalculator.Round;

@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.controller;
+package net.atos.mev.calendarcalculator.controller;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import net.atos.mev.calendar.service.CompetitionCatalogService;
-import net.atos.mev.calendar.service.CompetitionPropertiesService;
-import net.atos.mev.calendar.service.dto.CompetitionDTO;
-import net.atos.mev.calendar.service.dto.CompetitionRuntimeOverridesDTO;
+import net.atos.mev.calendarcalculator.service.CompetitionCatalogService;
+import net.atos.mev.calendarcalculator.service.CompetitionPropertiesService;
+import net.atos.mev.calendarcalculator.service.dto.CompetitionDTO;
+import net.atos.mev.calendarcalculator.service.dto.CompetitionRuntimeOverridesDTO;
 
 @RestController
 @RequestMapping("/api/config")

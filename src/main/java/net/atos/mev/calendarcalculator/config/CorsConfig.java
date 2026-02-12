@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.config;
+package net.atos.mev.calendarcalculator.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

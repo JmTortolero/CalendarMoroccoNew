@@ -1,12 +1,12 @@
-package net.atos.mev.calendar.service;
+package net.atos.mev.calendarcalculator.service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
-import net.atos.mev.calendar.config.CalendarCompetitionsProperties;
-import net.atos.mev.calendar.service.dto.CompetitionDTO;
+import net.atos.mev.calendarcalculator.config.CalendarCompetitionsProperties;
+import net.atos.mev.calendarcalculator.service.dto.CompetitionDTO;
 
 @Service
 public class CompetitionCatalogService {

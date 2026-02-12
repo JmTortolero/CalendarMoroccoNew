@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.config;
+package net.atos.mev.calendarcalculator.config;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

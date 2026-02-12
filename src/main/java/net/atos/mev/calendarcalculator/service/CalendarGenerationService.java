@@ -1,11 +1,11 @@
-package net.atos.mev.calendar.service;
+package net.atos.mev.calendarcalculator.service;
 
 import java.io.ByteArrayInputStream;
 import java.util.Properties;
 
 import org.springframework.stereotype.Service;
 
-import net.atos.mev.calendar.service.dto.CompetitionRuntimeOverridesDTO;
+import net.atos.mev.calendarcalculator.service.dto.CompetitionRuntimeOverridesDTO;
 
 @Service
 public class CalendarGenerationService {

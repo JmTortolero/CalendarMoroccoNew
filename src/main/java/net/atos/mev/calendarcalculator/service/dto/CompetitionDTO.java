@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.service.dto;
+package net.atos.mev.calendarcalculator.service.dto;
 
 public record CompetitionDTO(
     String id,

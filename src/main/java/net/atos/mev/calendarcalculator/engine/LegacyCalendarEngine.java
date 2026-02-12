@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.engine;
+package net.atos.mev.calendarcalculator.engine;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;

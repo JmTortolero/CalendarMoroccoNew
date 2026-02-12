@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.service;
+package net.atos.mev.calendarcalculator.service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,8 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import net.atos.mev.calendar.config.CalendarCompetitionsProperties;
-import net.atos.mev.calendar.service.dto.CompetitionExcelFileDTO;
+import net.atos.mev.calendarcalculator.config.CalendarCompetitionsProperties;
+import net.atos.mev.calendarcalculator.service.dto.CompetitionExcelFileDTO;
 
 @Service
 public class CompetitionExcelStorageService {

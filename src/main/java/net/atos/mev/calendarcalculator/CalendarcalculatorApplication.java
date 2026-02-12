@@ -1,4 +1,4 @@
-package net.atos.mev.calendar;
+package net.atos.mev.calendarcalculator;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

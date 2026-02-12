@@ -1,4 +1,4 @@
-package net.atos.mev.calendar.controller;
+package net.atos.mev.calendarcalculator.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -23,11 +23,11 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
-import net.atos.mev.calendar.service.CalendarGenerationService;
-import net.atos.mev.calendar.service.CompetitionCatalogService;
-import net.atos.mev.calendar.service.CompetitionExcelStorageService;
-import net.atos.mev.calendar.service.dto.CompetitionDTO;
-import net.atos.mev.calendar.service.dto.CompetitionExcelFileDTO;
+import net.atos.mev.calendarcalculator.service.CalendarGenerationService;
+import net.atos.mev.calendarcalculator.service.CompetitionCatalogService;
+import net.atos.mev.calendarcalculator.service.CompetitionExcelStorageService;
+import net.atos.mev.calendarcalculator.service.dto.CompetitionDTO;
+import net.atos.mev.calendarcalculator.service.dto.CompetitionExcelFileDTO;
 
 @WebMvcTest(CalendarController.class)
 class CalendarControllerTest {
