@@ -1,6 +1,8 @@
 spring:
   config:
-    # Local default for IDE/mvn runs. In Kubernetes, /config/application.yml
-    # from Helm (via SPRING_CONFIG_ADDITIONAL_LOCATION) overrides this.
-    import: optional:file:./data/calendar/application.yml
-
+    # Local order:
+    # 1) generated from Helm values (scripts/sync-local-config.sh)
+    # 2) legacy static local config
+    # In Kubernetes, /config/application.yml from Helm (via SPRING_CONFIG_ADDITIONAL_LOCATION)
+    # overrides this import.
+    import: optional:file:./data/calendar/generated/application.yml,optional:file:./data/calendar/application.yml
