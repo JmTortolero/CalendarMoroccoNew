@@ -1,14 +1,14 @@
 calendar:
   config:
-    competitions-dir: ./data
+    competitions-dir: ./data/generated
   storage:
-    base-dir: ./data
+    base-dir: ./data/dataFiles
   results:
     base-dir: ./data/results
   competitions:
     BOTOLA_D1:
       name: Botola Pro (1a Division)
-      file: schBotolaD1/SchMoroccoD1.properties
+      file: SchMoroccoD1.properties
       storage-dir: schBotolaD1
       enabled: true
       env: MoroccoDiv1.properties
@@ -16,7 +16,7 @@ calendar:
       end: "01/07/2026"
     BOTOLA_D2:
       name: Botola 2 (2a Division)
-      file: schBotolaD2/SchMoroccoD2.properties
+      file: SchMoroccoD2.properties
       storage-dir: schBotolaD2
       enabled: true
       env: MoroccoDiv2v1.properties

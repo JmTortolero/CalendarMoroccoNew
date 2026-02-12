@@ -1,14 +1,14 @@
 calendar:
   config:
-    competitions-dir: ./data
+    competitions-dir: ./data/generated
   storage:
-    base-dir: ./data
+    base-dir: ./data/dataFiles
   results:
     base-dir: ./data/results
   competitions:
     BOTOLA_D1:
       name: Botola Pro (1a Division)
-      file: schBotolaD1/SchMoroccoD1.properties
+      file: SchMoroccoD1.properties
       storage-dir: schBotolaD1
       enabled: true
       env: MoroccoDiv1.properties
@@ -16,7 +16,7 @@ calendar:
       end: "01/07/2026"
     BOTOLA_D2:
       name: Botola 2 (2a Division)
-      file: schBotolaD2/SchMoroccoD2.properties
+      file: SchMoroccoD2.properties
       storage-dir: schBotolaD2
       enabled: true
       env: MoroccoDiv2v1.properties
@@ -24,7 +24,7 @@ calendar:
       end: "01/07/2026"
     CNPFF_D1:
       name: CNPFF (1a Division Femenina)
-      file: schCNPFF1/MoroccoCNPFF1.properties
+      file: MoroccoCNPFF1.properties
       storage-dir: schCNPFF1
       enabled: true
       env: MoroccoFemDiv1.properties
@@ -32,7 +32,7 @@ calendar:
       end: "26/08/2026"
     CNPFF_D2:
       name: CNPFF (2a Division Femenina)
-      file: schCNPFF2/MoroccoCNPFF2.properties
+      file: MoroccoCNPFF2.properties
       storage-dir: schCNPFF2
       enabled: true
       env: MoroccoFemDiv2.properties
@@ -40,7 +40,7 @@ calendar:
       end: "26/08/2026"
     CNPFF_D2N:
       name: CNPFF (2a Division Femenina Norte)
-      file: schCNPFF2N/MoroccoCNPFF2N.properties
+      file: MoroccoCNPFF2N.properties
       storage-dir: schCNPFF2N
       enabled: true
       env: MoroccoFemDiv2Nord.properties
@@ -48,7 +48,7 @@ calendar:
       end: "30/06/2025"
     CNPFF_D2S:
       name: CNPFF (2a Division Femenina Sur)
-      file: schCNPFF2S/MoroccoCNPFF2S.properties
+      file: MoroccoCNPFF2S.properties
       storage-dir: schCNPFF2S
       enabled: true
       env: MoroccoFemDiv2Sud.properties
