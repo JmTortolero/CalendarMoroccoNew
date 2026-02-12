@@ -1,10 +1,13 @@
 package net.atos.mev.calendarcalculator.service;
 
 import java.io.ByteArrayInputStream;
+import java.nio.file.Path;
 import java.util.Properties;
 
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -17,20 +20,27 @@ import net.atos.mev.calendarcalculator.service.dto.GenerationExecutionResult;
 public class CalendarGenerationService {
 
     private static final String LOG_SCOPE = "net.atos.mev.calendarcalculator";
+    private static final String RESULTS_PREFIX = "results/";
 
     private final CompetitionPropertiesService competitionPropertiesService;
     private final CompetitionExcelStorageService competitionExcelStorageService;
+    private final GeneratedCalendarStorageService generatedCalendarStorageService;
     private final ScheduleFacade scheduleFacade;
     private final GenerationLogStoreService generationLogStoreService;
+
+    @Value("${calendar.results.base-dir:./results}")
+    private String resultsBaseDirectory = "./results";
 
     public CalendarGenerationService(
         CompetitionPropertiesService competitionPropertiesService,
         CompetitionExcelStorageService competitionExcelStorageService,
+        GeneratedCalendarStorageService generatedCalendarStorageService,
         ScheduleFacade scheduleFacade,
         GenerationLogStoreService generationLogStoreService
     ) {
         this.competitionPropertiesService = competitionPropertiesService;
         this.competitionExcelStorageService = competitionExcelStorageService;
+        this.generatedCalendarStorageService = generatedCalendarStorageService;
         this.scheduleFacade = scheduleFacade;
         this.generationLogStoreService = generationLogStoreService;
     }
@@ -89,10 +99,11 @@ public class CalendarGenerationService {
         Integer lastRoundToAssign
     ) {
         String dynamicResultsFolder = competitionExcelStorageService.buildResultsFolder(competitionId, season, excelFileName);
+        String runtimeResultsFolder = resolveRuntimeResultsFolder(dynamicResultsFolder);
 
         CompetitionRuntimeOverridesDTO runtimeOverrides = new CompetitionRuntimeOverridesDTO(
             null,
-            dynamicResultsFolder,
+            runtimeResultsFolder,
             lastRoundToAssign
         );
 
@@ -104,7 +115,51 @@ public class CalendarGenerationService {
             ));
 
         ByteArrayInputStream inputStream = new ByteArrayInputStream(excelBytes);
-        return scheduleFacade.run(finalProperties, inputStream);
+        byte[] generatedExcel = scheduleFacade.run(finalProperties, inputStream);
+
+        Integer effectiveLastRound = resolveEffectiveLastRound(lastRoundToAssign, finalProperties);
+        generatedCalendarStorageService.createGenerationZip(competitionId, season, runtimeResultsFolder, effectiveLastRound);
+
+        return generatedExcel;
+    }
+
+    private String resolveRuntimeResultsFolder(String generationResultsFolder) {
+        if (!StringUtils.hasText(generationResultsFolder)) {
+            throw new IllegalArgumentException("Generation results folder is required");
+        }
+
+        Path normalizedResultsBase = Path.of(resultsBaseDirectory).toAbsolutePath().normalize();
+        String normalizedInput = generationResultsFolder.replace('\\', '/');
+        Path resolved;
+        if (Path.of(normalizedInput).isAbsolute()) {
+            resolved = Path.of(normalizedInput).normalize();
+        } else if (normalizedInput.startsWith(RESULTS_PREFIX)) {
+            resolved = normalizedResultsBase.resolve(normalizedInput.substring(RESULTS_PREFIX.length())).normalize();
+        } else {
+            resolved = Path.of(".").toAbsolutePath().normalize().resolve(normalizedInput).normalize();
+        }
+
+        if (!resolved.startsWith(normalizedResultsBase)) {
+            throw new IllegalArgumentException("Invalid generation results folder: " + generationResultsFolder);
+        }
+        return resolved.toString();
+    }
+
+    private Integer resolveEffectiveLastRound(Integer requestedLastRound, Properties finalProperties) {
+        if (requestedLastRound != null) {
+            return requestedLastRound;
+        }
+
+        String configuredLastRound = finalProperties.getProperty("ScheduleMoroccoAlg.lastRoundToAssign");
+        if (configuredLastRound == null || configuredLastRound.isBlank()) {
+            return null;
+        }
+
+        try {
+            return Integer.valueOf(configuredLastRound.trim());
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
     private static final class SessionLogAppender extends AppenderBase<ILoggingEvent> {

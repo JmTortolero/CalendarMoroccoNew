@@ -38,6 +38,7 @@ public class CalendarController {
 
     private static final MediaType XLSX_MEDIA_TYPE =
         MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    private static final MediaType ZIP_MEDIA_TYPE = MediaType.parseMediaType("application/zip");
 
     private final CompetitionCatalogService competitionCatalogService;
     private final CompetitionExcelStorageService competitionExcelStorageService;
@@ -169,7 +170,7 @@ public class CalendarController {
             }
 
             return ResponseEntity.ok()
-                .contentType(XLSX_MEDIA_TYPE)
+                .contentType(resolveGeneratedFileMediaType(excelBytes))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                 .body(excelBytes);
         } catch (IllegalArgumentException exception) {
@@ -197,5 +198,21 @@ public class CalendarController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .contentType(MediaType.TEXT_PLAIN)
             .body(exception.getMessage());
+    }
+
+    private MediaType resolveGeneratedFileMediaType(byte[] fileBytes) {
+        if (isZipFile(fileBytes)) {
+            return ZIP_MEDIA_TYPE;
+        }
+        return XLSX_MEDIA_TYPE;
+    }
+
+    private boolean isZipFile(byte[] fileBytes) {
+        if (fileBytes == null || fileBytes.length < 4) {
+            return false;
+        }
+        return (fileBytes[0] == 'P' && fileBytes[1] == 'K')
+            && (fileBytes[2] == 3 || fileBytes[2] == 5 || fileBytes[2] == 7)
+            && (fileBytes[3] == 4 || fileBytes[3] == 6 || fileBytes[3] == 8);
     }
 }

@@ -14,6 +14,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -215,5 +219,40 @@ class CalendarControllerTest {
         mockMvc.perform(get("/api/calendar/competitions/BOTOLA_D1/seasons/2025-26/generated-full-calendars/download-1"))
             .andExpect(status().isOk())
             .andExpect(header().string("Content-Disposition", "attachment; filename=\"fullCalendarD1.xlsx\""));
+    }
+
+    @Test
+    void shouldDownloadGeneratedZipWithZipContentType() throws Exception {
+        CompetitionDTO competition = new CompetitionDTO("BOTOLA_D1", "Botola Pro (1a Division)", "schBotolaD1/SchMoroccoD1.properties", true);
+        when(competitionCatalogService.getCompetitionById("BOTOLA_D1")).thenReturn(Optional.of(competition));
+        when(generatedCalendarStorageService.readGeneratedFullCalendar("BOTOLA_D1", "2025-26", "download-zip"))
+            .thenReturn(Optional.of(buildZipBytes()));
+        when(generatedCalendarStorageService.listGeneratedFullCalendars("BOTOLA_D1", "2025-26"))
+            .thenReturn(List.of(
+                new GeneratedCalendarFileDTO(
+                    "D1 MEN 2025-26 rounds to 8.zip",
+                    "v1",
+                    "schBotolaD1-v1",
+                    1500L,
+                    Instant.parse("2026-02-12T00:08:00Z"),
+                    "download-zip"
+                )
+            ));
+
+        mockMvc.perform(get("/api/calendar/competitions/BOTOLA_D1/seasons/2025-26/generated-full-calendars/download-zip"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Content-Type", "application/zip"))
+            .andExpect(header().string("Content-Disposition", "attachment; filename=\"D1 MEN 2025-26 rounds to 8.zip\""));
+    }
+
+    private byte[] buildZipBytes() throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try (ZipOutputStream zipOutput = new ZipOutputStream(output)) {
+            zipOutput.putNextEntry(new ZipEntry("sample.txt"));
+            zipOutput.write("sample".getBytes());
+            zipOutput.closeEntry();
+            zipOutput.finish();
+        }
+        return output.toByteArray();
     }
 }

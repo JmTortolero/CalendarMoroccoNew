@@ -3,6 +3,8 @@ calendar:
     competitions-dir: ./data/calendar
   storage:
     base-dir: ./data/calendar
+  results:
+    base-dir: ./data/calendar/results
   competitions:
     BOTOLA_D1:
       name: Botola Pro (1a Division)

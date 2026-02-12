@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -29,6 +30,9 @@ class CalendarGenerationServiceTest {
     private CompetitionExcelStorageService competitionExcelStorageService;
 
     @Mock
+    private GeneratedCalendarStorageService generatedCalendarStorageService;
+
+    @Mock
     private ScheduleFacade scheduleFacade;
 
     @Mock
@@ -39,6 +43,13 @@ class CalendarGenerationServiceTest {
 
     @Test
     void shouldUseDynamicResultsFolderFromSeasonAndExcelVersion() {
+        String expectedResultsFolder = Path.of("./results")
+            .toAbsolutePath()
+            .normalize()
+            .resolve("2025-26")
+            .resolve("schBotolaD1-v7")
+            .toString();
+
         Properties resolvedProperties = new Properties();
         when(competitionExcelStorageService.buildResultsFolder("BOTOLA_D1", "2025-26", "CalendarD1-v7.xlsx"))
             .thenReturn("results/2025-26/schBotolaD1-v7");
@@ -58,8 +69,10 @@ class CalendarGenerationServiceTest {
         verify(competitionPropertiesService).loadFinalProperties(eq("BOTOLA_D1"), runtimeOverridesCaptor.capture());
 
         CompetitionRuntimeOverridesDTO runtimeOverrides = runtimeOverridesCaptor.getValue();
-        assertThat(runtimeOverrides.resultsFolder()).isEqualTo("results/2025-26/schBotolaD1-v7");
+        assertThat(runtimeOverrides.resultsFolder()).isEqualTo(expectedResultsFolder);
         assertThat(runtimeOverrides.lastRoundToAssign()).isEqualTo(4);
         assertThat(runtimeOverrides.datesFile()).isNull();
+
+        verify(generatedCalendarStorageService).createGenerationZip("BOTOLA_D1", "2025-26", expectedResultsFolder, 4);
     }
 }
