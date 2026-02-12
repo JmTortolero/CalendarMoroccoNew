@@ -12,8 +12,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -36,6 +39,12 @@ public class CompetitionExcelStorageService {
     private static final String COMPETITION_ID_REGEX = "^[A-Za-z0-9_-]+$";
     private static final String SEASON_REGEX = "^[A-Za-z0-9][A-Za-z0-9._-]*$";
     private static final String FILE_NAME_REGEX = "^[A-Za-z0-9._() -]+(?i)\\.xlsx$";
+    private static final Pattern CALENDAR_FILE_NAME_PATTERN =
+        Pattern.compile("^CalendarD([12])-v(\\d+)\\.xlsx$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern DIVISION_D1_PATTERN = Pattern.compile("(^|[^A-Z0-9])D1([^A-Z0-9]|$)");
+    private static final Pattern DIVISION_D2_PATTERN = Pattern.compile("(^|[^A-Z0-9])D2([^A-Z0-9]|$)");
+    private static final Pattern DIVISION_1_TEXT_PATTERN = Pattern.compile("\\bDIVISION\\s*1\\b|\\b1A\\s*DIVISION\\b");
+    private static final Pattern DIVISION_2_TEXT_PATTERN = Pattern.compile("\\bDIVISION\\s*2\\b|\\b2A\\s*DIVISION\\b");
 
     private final Path baseDirectory;
     private final ResourcePatternResolver resourcePatternResolver;
@@ -128,6 +137,7 @@ public class CompetitionExcelStorageService {
         if (!isValidExcelFileName(originalFileName)) {
             throw new IllegalArgumentException("Invalid excel file name: " + originalFileName);
         }
+        validateExcelFileNameForCompetition(competitionId, originalFileName);
 
         Path seasonDirectory = resolveSeasonDirectory(competitionId, season);
         Path target = seasonDirectory.resolve(originalFileName).normalize();
@@ -201,6 +211,20 @@ public class CompetitionExcelStorageService {
         return safeBase + "-" + timestamp + ".xlsx";
     }
 
+    public void validateExcelFileNameForCompetition(String competitionId, String fileName) {
+        validateAndParseCalendarFileName(competitionId, fileName);
+    }
+
+    public String buildResultsFolder(String competitionId, String season, String excelFileName) {
+        if (season == null || !season.matches(SEASON_REGEX)) {
+            throw new IllegalArgumentException("Invalid season: " + season);
+        }
+
+        ParsedCalendarFileName parsedFileName = validateAndParseCalendarFileName(competitionId, excelFileName);
+        String storageDirectory = resolveStorageDirectoryName(competitionId);
+        return "results/" + season + "/" + storageDirectory + "-" + parsedFileName.versionLabel();
+    }
+
     private Path resolveSeasonDirectory(String competitionId, String season) {
         if (competitionId == null || !competitionId.matches(COMPETITION_ID_REGEX)) {
             throw new IllegalArgumentException("Invalid competitionId: " + competitionId);
@@ -223,6 +247,70 @@ public class CompetitionExcelStorageService {
 
     private boolean isValidExcelFileName(String fileName) {
         return fileName != null && fileName.matches(FILE_NAME_REGEX);
+    }
+
+    private ParsedCalendarFileName validateAndParseCalendarFileName(String competitionId, String fileName) {
+        String normalizedFileName = normalizeFileName(fileName);
+        if (!isValidExcelFileName(normalizedFileName)) {
+            throw new IllegalArgumentException("Invalid excel file name: " + fileName);
+        }
+
+        Matcher matcher = CALENDAR_FILE_NAME_PATTERN.matcher(normalizedFileName);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException(invalidPatternMessage(inferExpectedDivision(competitionId)));
+        }
+
+        String foundDivision = "D" + matcher.group(1);
+        String expectedDivision = inferExpectedDivision(competitionId);
+        if (expectedDivision != null && !expectedDivision.equals(foundDivision)) {
+            throw new IllegalArgumentException(invalidPatternMessage(expectedDivision));
+        }
+
+        return new ParsedCalendarFileName(foundDivision, "v" + matcher.group(2));
+    }
+
+    private String normalizeFileName(String fileName) {
+        return fileName == null ? "" : fileName.trim();
+    }
+
+    private String inferExpectedDivision(String competitionId) {
+        CalendarCompetitionsProperties.CompetitionConfig competitionConfig = findCompetitionConfig(competitionId);
+        if (competitionConfig == null) {
+            return null;
+        }
+
+        if (containsDivision(competitionId, "D1")
+            || containsDivision(competitionConfig.getFile(), "D1")
+            || containsDivision(competitionConfig.getName(), "D1")) {
+            return "D1";
+        }
+
+        if (containsDivision(competitionId, "D2")
+            || containsDivision(competitionConfig.getFile(), "D2")
+            || containsDivision(competitionConfig.getName(), "D2")) {
+            return "D2";
+        }
+
+        return null;
+    }
+
+    private boolean containsDivision(String source, String division) {
+        String normalized = source == null ? "" : source.toUpperCase(Locale.ROOT);
+        if ("D1".equals(division)) {
+            return DIVISION_D1_PATTERN.matcher(normalized).find() || DIVISION_1_TEXT_PATTERN.matcher(normalized).find();
+        }
+
+        return DIVISION_D2_PATTERN.matcher(normalized).find() || DIVISION_2_TEXT_PATTERN.matcher(normalized).find();
+    }
+
+    private String invalidPatternMessage(String expectedDivision) {
+        if (expectedDivision != null) {
+            return "Invalid file name for selected competition. Expected format (case-insensitive): Calendar"
+                + expectedDivision
+                + "-v<number>.xlsx";
+        }
+
+        return "Invalid file name. Expected format (case-insensitive): CalendarD1-v<number>.xlsx or CalendarD2-v<number>.xlsx";
     }
 
     private Resource findClasspathExcelResource(String competitionId, String season, String fileName) {
@@ -369,5 +457,8 @@ public class CompetitionExcelStorageService {
         }
 
         return new CompetitionExcelFileDTO(fileName, size, lastModified);
+    }
+
+    private record ParsedCalendarFileName(String division, String versionLabel) {
     }
 }

@@ -88,9 +88,11 @@ public class CalendarGenerationService {
         String excelFileName,
         Integer lastRoundToAssign
     ) {
+        String dynamicResultsFolder = competitionExcelStorageService.buildResultsFolder(competitionId, season, excelFileName);
+
         CompetitionRuntimeOverridesDTO runtimeOverrides = new CompetitionRuntimeOverridesDTO(
             null,
-            null,
+            dynamicResultsFolder,
             lastRoundToAssign
         );
 

@@ -96,6 +96,30 @@ class CalendarControllerTest {
     }
 
     @Test
+    void shouldReturnBadRequestWhenUploadNamePatternIsInvalid() throws Exception {
+        CompetitionDTO competition = new CompetitionDTO("BOTOLA_D1", "Botola Pro (1a Division)", "schBotolaD1/SchMoroccoD1.properties", true);
+        when(competitionCatalogService.getCompetitionById("BOTOLA_D1")).thenReturn(Optional.of(competition));
+
+        MockMultipartFile excel = new MockMultipartFile(
+            "excel",
+            "CalendarD2-v1.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "dummy-base".getBytes()
+        );
+        when(competitionExcelStorageService.storeExcelFile(eq("BOTOLA_D1"), eq("2025-26"), any(), eq(true)))
+            .thenThrow(new IllegalArgumentException(
+                "Invalid file name for selected competition. Expected format (case-insensitive): CalendarD1-v<number>.xlsx"
+            ));
+
+        mockMvc.perform(
+                multipart("/api/calendar/competitions/BOTOLA_D1/seasons/2025-26/excels")
+                    .file(excel)
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+            )
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void shouldDownloadExcelForCompetitionAndSeason() throws Exception {
         CompetitionDTO competition = new CompetitionDTO("BOTOLA_D1", "Botola Pro (1a Division)", "schBotolaD1/SchMoroccoD1.properties", true);
         when(competitionCatalogService.getCompetitionById("BOTOLA_D1")).thenReturn(Optional.of(competition));

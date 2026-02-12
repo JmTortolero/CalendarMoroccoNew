@@ -75,8 +75,12 @@ public class CalendarController {
         @RequestParam("excel") MultipartFile excel,
         @RequestParam(value = "overwrite", required = false, defaultValue = "true") boolean overwrite
     ) {
-        ensureCompetitionExists(competitionId);
-        return competitionExcelStorageService.storeExcelFile(competitionId, season, excel, overwrite);
+        try {
+            ensureCompetitionExists(competitionId);
+            return competitionExcelStorageService.storeExcelFile(competitionId, season, excel, overwrite);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
+        }
     }
 
     @GetMapping("/competitions/{competitionId}/seasons/{season}/excels/{fileName:.+}")
