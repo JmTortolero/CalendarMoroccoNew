@@ -1,10 +1,10 @@
 calendar:
   config:
-    competitions-dir: ./data/calendar
+    competitions-dir: ./data
   storage:
-    base-dir: ./data/calendar
+    base-dir: ./data
   results:
-    base-dir: ./data/calendar/results
+    base-dir: ./data/results
   competitions:
     BOTOLA_D1:
       name: Botola Pro (1a Division)

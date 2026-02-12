@@ -62,3 +62,14 @@ Unificar ambos mundos:
 
 Este documento describe el estado actual del proyecto.
 La explicación detallada y el plan de migración se definirán más adelante.
+
+---
+
+## Infraestructura Helm
+
+Los charts y scripts de Helm están separados en otro repositorio Git:
+
+- `../helmMorocco`
+- Chart principal: `../helmMorocco/charts/calendar-morocco-cli`
+
+Este repositorio (`backMorocco`) contiene solo backend Spring Boot.

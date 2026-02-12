@@ -1,8 +1,20 @@
 spring:
+  application:
+    name: calendarcalculator
   config:
     # Local order:
     # 1) generated from Helm values (scripts/sync-local-config.sh)
     # 2) legacy static local config
     # In Kubernetes, /config/application.yml from Helm (via SPRING_CONFIG_ADDITIONAL_LOCATION)
     # overrides this import.
-    import: optional:file:./data/calendar/generated/application.yml,optional:file:./data/calendar/application.yml
+    import: optional:file:./data/generated/application.yml,optional:file:./data/application.yml
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework.web: INFO
+    net.atos.mev: DEBUG
+    net.atos.mev.calendarcalculator: DEBUG
+    net.atos.mev.calendarcalculator.schedules: TRACE

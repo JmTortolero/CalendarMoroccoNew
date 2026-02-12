@@ -52,7 +52,7 @@ public class CompetitionExcelStorageService {
     private final CompetitionPropertiesService competitionPropertiesService;
 
     public CompetitionExcelStorageService(
-        @Value("${calendar.storage.base-dir:./data/calendar}") String baseDirectory,
+        @Value("${calendar.storage.base-dir:./data}") String baseDirectory,
         ResourcePatternResolver resourcePatternResolver,
         CalendarCompetitionsProperties calendarCompetitionsProperties,
         CompetitionPropertiesService competitionPropertiesService

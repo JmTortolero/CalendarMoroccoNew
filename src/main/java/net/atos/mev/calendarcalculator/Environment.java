@@ -67,7 +67,7 @@ public class Environment {
 
 		Path[] candidates = new Path[] {
 			Path.of(propertiesFile),
-			Path.of("./data/calendar").resolve(propertiesFile),
+			Path.of("./data").resolve(propertiesFile),
 			Path.of("/config/competitions").resolve(propertiesFile)
 		};
 

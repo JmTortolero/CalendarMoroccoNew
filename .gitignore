@@ -72,4 +72,7 @@ replay_pid*
 ### OS ###
 .DS_Store
 Thumbs.db
+
+# Generated from Helm values for local runs (scripts/sync-local-config.sh)
+data/generated/
  
