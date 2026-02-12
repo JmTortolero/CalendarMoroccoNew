@@ -23,7 +23,12 @@ import org.springframework.web.server.ResponseStatusException;
 import net.atos.mev.calendarcalculator.service.CalendarGenerationService;
 import net.atos.mev.calendarcalculator.service.CompetitionCatalogService;
 import net.atos.mev.calendarcalculator.service.CompetitionExcelStorageService;
+import net.atos.mev.calendarcalculator.service.GeneratedCalendarStorageService;
+import net.atos.mev.calendarcalculator.service.GenerationFailedException;
+import net.atos.mev.calendarcalculator.service.GenerationLogStoreService;
 import net.atos.mev.calendarcalculator.service.dto.CompetitionExcelFileDTO;
+import net.atos.mev.calendarcalculator.service.dto.GeneratedCalendarFileDTO;
+import net.atos.mev.calendarcalculator.service.dto.GenerationLogsDTO;
 
 @RestController
 @RequestMapping("/api/calendar")
@@ -36,16 +41,22 @@ public class CalendarController {
 
     private final CompetitionCatalogService competitionCatalogService;
     private final CompetitionExcelStorageService competitionExcelStorageService;
+    private final GeneratedCalendarStorageService generatedCalendarStorageService;
     private final CalendarGenerationService calendarGenerationService;
+    private final GenerationLogStoreService generationLogStoreService;
 
     public CalendarController(
         CompetitionCatalogService competitionCatalogService,
         CompetitionExcelStorageService competitionExcelStorageService,
-        CalendarGenerationService calendarGenerationService
+        GeneratedCalendarStorageService generatedCalendarStorageService,
+        CalendarGenerationService calendarGenerationService,
+        GenerationLogStoreService generationLogStoreService
     ) {
         this.competitionCatalogService = competitionCatalogService;
         this.competitionExcelStorageService = competitionExcelStorageService;
+        this.generatedCalendarStorageService = generatedCalendarStorageService;
         this.calendarGenerationService = calendarGenerationService;
+        this.generationLogStoreService = generationLogStoreService;
     }
 
     @GetMapping("/competitions/{competitionId}/seasons/{season}/excels")
@@ -94,7 +105,7 @@ public class CalendarController {
         try {
             ensureCompetitionExists(competitionId);
 
-            byte[] generatedExcel = calendarGenerationService.generateCalendar(
+            var generationResult = calendarGenerationService.generateCalendarWithLogs(
                 competitionId,
                 season,
                 excelFileName,
@@ -106,8 +117,57 @@ public class CalendarController {
 
             return ResponseEntity.ok()
                 .contentType(XLSX_MEDIA_TYPE)
+                .header("X-Generation-Id", generationResult.generationId())
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .body(generatedExcel);
+                .body(generationResult.generatedExcel());
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
+        }
+    }
+
+    @GetMapping("/generations/{generationId}/logs")
+    public GenerationLogsDTO generationLogs(@PathVariable String generationId) {
+        return generationLogStoreService.getLogs(generationId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Generation not found: " + generationId));
+    }
+
+    @GetMapping("/competitions/{competitionId}/seasons/{season}/generated-full-calendars")
+    public List<GeneratedCalendarFileDTO> listGeneratedFullCalendars(
+        @PathVariable String competitionId,
+        @PathVariable String season
+    ) {
+        ensureCompetitionExists(competitionId);
+        try {
+            return generatedCalendarStorageService.listGeneratedFullCalendars(competitionId, season);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
+        }
+    }
+
+    @GetMapping("/competitions/{competitionId}/seasons/{season}/generated-full-calendars/{downloadId}")
+    public ResponseEntity<byte[]> downloadGeneratedFullCalendar(
+        @PathVariable String competitionId,
+        @PathVariable String season,
+        @PathVariable String downloadId
+    ) {
+        ensureCompetitionExists(competitionId);
+        try {
+            byte[] excelBytes = generatedCalendarStorageService.readGeneratedFullCalendar(competitionId, season, downloadId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Generated full calendar not found"));
+
+            String fileName = "fullCalendar.xlsx";
+            var generatedFiles = generatedCalendarStorageService.listGeneratedFullCalendars(competitionId, season);
+            for (GeneratedCalendarFileDTO file : generatedFiles) {
+                if (file.downloadId().equals(downloadId)) {
+                    fileName = file.fileName();
+                    break;
+                }
+            }
+
+            return ResponseEntity.ok()
+                .contentType(XLSX_MEDIA_TYPE)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .body(excelBytes);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
         }
@@ -116,6 +176,15 @@ public class CalendarController {
     private void ensureCompetitionExists(String competitionId) {
         competitionCatalogService.getCompetitionById(competitionId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Competition not found: " + competitionId));
+    }
+
+    @ExceptionHandler(GenerationFailedException.class)
+    public ResponseEntity<String> handleGenerationFailedException(GenerationFailedException exception) {
+        log.error("Calendar generation failed. generationId={}", exception.getGenerationId(), exception);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .contentType(MediaType.TEXT_PLAIN)
+            .header("X-Generation-Id", exception.getGenerationId())
+            .body(exception.getMessage());
     }
 
     @ExceptionHandler(IllegalStateException.class)
