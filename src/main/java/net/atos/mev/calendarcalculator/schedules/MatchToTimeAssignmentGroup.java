@@ -4,7 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class MatchToTimeAssignmentGroup {
+
+	private static final Logger log = LoggerFactory.getLogger(MatchToTimeAssignmentGroup.class);
 
 	int[] bestTimeAssignment = null;
 	int[] bestDiffPerTimeSlot;
@@ -78,7 +83,7 @@ public class MatchToTimeAssignmentGroup {
 		}
 		if(bestTimeAssignment == null) {
 			bestDiffPerTimeSlot=newDiffTimeslot;
-			System.out.println("Found first solution: " + Arrays.toString(bestDiffPerTimeSlot));
+			log.debug("Found first solution: {}", Arrays.toString(bestDiffPerTimeSlot));
 			return true;
 		}
 		//for(int iTimeslot=0; iTimeslot < nTimeslots; iTimeslot++) {
@@ -87,7 +92,7 @@ public class MatchToTimeAssignmentGroup {
 				return false;
 			} else if (newDiffTimeslot[iTimeslot]<bestDiffPerTimeSlot[iTimeslot]) {
 				bestDiffPerTimeSlot=newDiffTimeslot;
-				System.out.println("Found new solution: " + Arrays.toString(bestDiffPerTimeSlot));
+				log.debug("Found new solution: {}", Arrays.toString(bestDiffPerTimeSlot));
 				return true;
 			}
 		}

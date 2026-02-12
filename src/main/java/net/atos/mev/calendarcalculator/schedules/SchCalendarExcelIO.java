@@ -12,6 +12,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -31,9 +33,11 @@ import net.atos.mev.calendarcalculator.Team;
 
 public class SchCalendarExcelIO {
 
+	private static final Logger log = LoggerFactory.getLogger(SchCalendarExcelIO.class);
+
 	public static SchCalendar loadFromExcel(SchEnvironment schEnv) {
 		try {
-			System.out.println("Reading excel " + schEnv.datesFile);
+			log.info("Reading excel {}", schEnv.datesFile);
 			URL url = ClassLoader.getSystemResource(schEnv.datesFile);
 			if (url == null) {
 				throw new IllegalStateException("Excel file not found in classpath: " + schEnv.datesFile);
@@ -64,7 +68,7 @@ public class SchCalendarExcelIO {
 						}
 
 						String date = cell.getStringCellValue();
-						System.out.println(competition+","+date);
+						log.trace("Row competition/date: {},{}", competition, date);
 						if(competition.equals(schEnv.env.getCode())) {
 							Cell cellOfRound = row.getCell(1, MissingCellPolicy.CREATE_NULL_AS_BLANK);
 							String competitionRoundString="";
@@ -131,7 +135,7 @@ public class SchCalendarExcelIO {
 			}
 			workbook.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("Error loading calendar from excel input stream", e);
 		}
 		return result;
 	}
@@ -205,7 +209,7 @@ public class SchCalendarExcelIO {
 			outStream.flush();
 			outStream.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("Error writing statistics CSV: " + fileName, e);
 		}
 	}
 
@@ -266,7 +270,7 @@ public class SchCalendarExcelIO {
 			outStream.flush();
 			outStream.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("Error writing summary-per-team CSV: " + fileName, e);
 		}
 	}
 
@@ -282,7 +286,7 @@ public class SchCalendarExcelIO {
 				matchdaysToExcel(calendar, outputStream, schEnv);
 			}
 		} catch(Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("Error writing calendar excel: " + fileName, e);
 		}
 	}
 
@@ -380,7 +384,9 @@ public class SchCalendarExcelIO {
 				}
 			}
 
-			sheet.setAutoFilter(CellRangeAddress.valueOf("A1:H"+rowCount));
+			// rowCount is zero-based. AutoFilter expects 1-based Excel row indexes.
+			int lastExcelRow = Math.max(1, rowCount + 1);
+			sheet.setAutoFilter(CellRangeAddress.valueOf("A1:H" + lastExcelRow));
 
 			File outputFile = new File(fileName);
 			File containingFolder = outputFile.getParentFile();
@@ -393,7 +399,7 @@ public class SchCalendarExcelIO {
 
 			workbook.close();
 		} catch(Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("Error writing summary-per-team excel: " + fileName, e);
 		}
 	}
 
@@ -487,7 +493,7 @@ public class SchCalendarExcelIO {
 			outStream.flush();
 			outStream.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("Error writing matchdays CSV: " + fileName, e);
 		}
 	}
 
@@ -548,7 +554,7 @@ public class SchCalendarExcelIO {
 			outStream.flush();
 			outStream.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("Error writing time statistics CSV: " + fileName, e);
 		}
 	}
 

@@ -8,6 +8,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +28,8 @@ import net.atos.mev.calendar.service.dto.CompetitionExcelFileDTO;
 @RestController
 @RequestMapping("/api/calendar")
 public class CalendarController {
+
+    private static final Logger log = LoggerFactory.getLogger(CalendarController.class);
 
     private static final MediaType XLSX_MEDIA_TYPE =
         MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -116,6 +120,7 @@ public class CalendarController {
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<String> handleGenerationError(IllegalStateException exception) {
+        log.error("Calendar generation failed", exception);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .contentType(MediaType.TEXT_PLAIN)
             .body(exception.getMessage());

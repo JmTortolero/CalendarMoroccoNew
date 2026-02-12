@@ -1,6 +1,10 @@
 package net.atos.mev.calendarcalculator;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -20,10 +24,9 @@ public class Environment {
 	Properties originalProp;
 
 	public void loadEnvironment(String propertiesFile) {
-		try {
+		try (InputStream inputStream = resolvePropertiesInputStream(propertiesFile)) {
 			originalProp = new java.util.Properties();
-			URL url = ClassLoader.getSystemResource(propertiesFile);
-			originalProp.load(url.openStream());
+			originalProp.load(inputStream);
 			name = originalProp.getProperty("name");
 			code = originalProp.getProperty("code");
 			nTeams = Integer.parseInt(originalProp.getProperty("nTeams"));
@@ -52,8 +55,35 @@ public class Environment {
 			checks = newChecks.toArray(checks);
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new IllegalStateException("Cannot load environment properties: " + propertiesFile, e);
 		}
+	}
+
+	private InputStream resolvePropertiesInputStream(String propertiesFile) throws IOException {
+		Path configured = Path.of(propertiesFile);
+		if (configured.isAbsolute() && Files.exists(configured)) {
+			return Files.newInputStream(configured);
+		}
+
+		Path[] candidates = new Path[] {
+			Path.of(propertiesFile),
+			Path.of("./data/calendar").resolve(propertiesFile),
+			Path.of("/config/competitions").resolve(propertiesFile)
+		};
+
+		for (Path candidate : candidates) {
+			Path normalized = candidate.toAbsolutePath().normalize();
+			if (Files.exists(normalized) && Files.isRegularFile(normalized)) {
+				return Files.newInputStream(normalized);
+			}
+		}
+
+		URL url = ClassLoader.getSystemResource(propertiesFile);
+		if (url != null) {
+			return url.openStream();
+		}
+
+		throw new IllegalStateException("Environment properties not found: " + propertiesFile);
 	}
 	
 	public Team searchTeamByCode(String code) {

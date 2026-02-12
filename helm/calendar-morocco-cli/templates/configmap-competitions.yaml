@@ -6,7 +6,14 @@ data:
 {{- range $id, $c := .Values.competitions }}
 {{- $content := index $.Values.competitionProperties $id }}
 {{- if $content }}
+{{- $seasonOverrides := default (dict) $.Values.competitionSeasonOverrides }}
+{{- $seasonKey := required (printf "season is required (or competitionSeasonOverrides.%s)" $id) (default $.Values.season (get $seasonOverrides $id)) }}
+{{- $seasonContent := required (printf "competitionPropertiesCommonBySeason.%s is required" $seasonKey) (index $.Values.competitionPropertiesCommonBySeason $seasonKey) }}
   {{ $c.propertiesFileName }}: |-
-{{ $content | indent 4 }}
+{{- if $.Values.competitionPropertiesCommon }}
+{{ tpl $.Values.competitionPropertiesCommon $ | indent 4 }}
+{{- end }}
+{{ tpl $seasonContent $ | indent 4 }}
+{{ tpl $content $ | indent 4 }}
 {{- end }}
 {{- end }}

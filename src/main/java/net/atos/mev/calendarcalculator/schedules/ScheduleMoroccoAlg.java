@@ -6,9 +6,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.atos.mev.calendarcalculator.Match;
 
 public class ScheduleMoroccoAlg {
+
+	private static final Logger log = LoggerFactory.getLogger(ScheduleMoroccoAlg.class);
 	
 	SchCalendar calendar;
 	SchEnvironment schEnv;
@@ -55,6 +61,7 @@ public class ScheduleMoroccoAlg {
 	String outputTeamExcel;
 	String outputStatisticsCSV;
 	String outputTimeStatisticsCSV;
+	boolean failOnNoFeasibleAssignment = false;
 	MatchToTimeAssignmentGroup currentTimeAssignment;
 	int[] repeatsTimeslotsPer4MatchDay = { 2, 1, 1 };
 	static final String EMPTYTIMESLOT = "12:12";
@@ -68,6 +75,9 @@ public class ScheduleMoroccoAlg {
 		outputTeamExcel = schEnv.prop.getProperty("ScheduleMoroccoAlg.outputTeamExcel");
 		outputStatisticsCSV = schEnv.prop.getProperty("ScheduleMoroccoAlg.outputStatisticsCSV");
 		outputTimeStatisticsCSV = schEnv.prop.getProperty("ScheduleMoroccoAlg.outputTimeStatisticsCSV");
+		failOnNoFeasibleAssignment = Boolean.parseBoolean(
+			schEnv.prop.getProperty("ScheduleMoroccoAlg.failOnNoFeasibleAssignment", "false")
+		);
 		lastRoundToAssign = Integer.valueOf(schEnv.prop.getProperty("ScheduleMoroccoAlg.lastRoundToAssign"));
 		maxMatchesPerDay = Integer.valueOf(schEnv.prop.getProperty("ScheduleMoroccoAlg.maxMatchesPerDay"));
 		groupsToRun = Integer.valueOf(schEnv.prop.getProperty("ScheduleMoroccoAlg.groupsToRun"));
@@ -142,7 +152,7 @@ public class ScheduleMoroccoAlg {
 		assignTimeOfDaysWithOneMatch();
 		prepareListOfAssignments();
 		while (currentTimeAssignment.allMatches.size() > 0) {
-			System.out.println("Times pending to assign: " + currentTimeAssignment.allMatches.size());
+			log.debug("Times pending to assign: {}", currentTimeAssignment.allMatches.size());
 			searchBestTimeAssignment();
 			applyBestTimeAssignment(1);
 			prepareListOfAssignments();
@@ -269,7 +279,7 @@ public class ScheduleMoroccoAlg {
 				}
 				currentTimeAssignment.removeLastTimeAssignment();
 			} else {
-				System.out.println("Some matchday has more than 4 matches??");
+				log.warn("Some matchday has more than 4 matches");
 				currentTimeAssignment.addTimeAssignment(0);
 				searchBestTimeAssignment();
 				currentTimeAssignment.removeLastTimeAssignment();
@@ -341,7 +351,7 @@ public class ScheduleMoroccoAlg {
 	}
 	
 	public void assignDayOfGroupOfTeams(int nGroup, int roundAssigning) {
-		System.out.println("Assigning group " + nGroup);
+		log.debug("Assigning group {}", nGroup);
 		roundsForwardLook = roundsForwardLookPerGroup.get(nGroup);
 		fillListOfAllRounds();
 		prepareListOfMatchesToAssign(nGroup, roundAssigning);
@@ -353,9 +363,18 @@ public class ScheduleMoroccoAlg {
 		if (currentAssignment.matchCodes.length > 0) {
 			solutionsFound = 0;
 			assignNextDayOfMatch(0);
-			System.out.println("nGroup=" + nGroup + ", roundAssigning=" + roundAssigning + ", solutionsFound=" + solutionsFound);
+			log.debug("nGroup={}, roundAssigning={}, solutionsFound={}", nGroup, roundAssigning, solutionsFound);
 			if (solutionsFound == 0) {
-				System.out.println("Last unassigned match " + currentAssignment.nLastMatchNotAssigned + " - " + currentAssignment.strLastMatchNotAssigned);
+				log.debug("Last unassigned match {} - {}", currentAssignment.nLastMatchNotAssigned, currentAssignment.strLastMatchNotAssigned);
+				String message = "No feasible assignment found for competition " + schEnv.env.code
+					+ " (group " + nGroup
+					+ ", round " + roundAssigning
+					+ "). Last unassigned: " + currentAssignment.strLastMatchNotAssigned;
+				if (failOnNoFeasibleAssignment) {
+					throw new IllegalStateException(message);
+				}
+				log.warn("{}; continuing with partial calendar", message);
+				return;
 			}
 			// Then we take the matches of the assignment and add them to the Calendar
 			copyBestMatchesToCalendar(roundAssigning);
@@ -459,8 +478,8 @@ public class ScheduleMoroccoAlg {
 								if (currentDayToTry >= firstMatchdayDay - maxDaysAdvanceMatch && currentDayToTry <= lastMatchdayDay + maxDaysPostponeMatch) {
 									if (!isSecondLegMatch && currentDayToTry < startSecondLegDay || isSecondLegMatch && currentDayToTry >= startSecondLegDay) {
 										if (nMatchAssign == 0) {
-											System.out.println("calRound=" + roundStartingIn1 + ",date=" + currentDayToTry + ",2leg=" + isSecondLegMatch + ",2LegStart=" + startSecondLegDay);
-											System.out.println(currentAssignment.matchTeamHome[nMatchAssign] + "-" + currentAssignment.matchTeamAway[nMatchAssign] + " trying " + currentDayToTry);
+											log.trace("calRound={}, date={}, 2leg={}, 2LegStart={}", roundStartingIn1, currentDayToTry, isSecondLegMatch, startSecondLegDay);
+											log.trace("{}-{} trying {}", currentAssignment.matchTeamHome[nMatchAssign], currentAssignment.matchTeamAway[nMatchAssign], currentDayToTry);
 										}
 										if (tryAssignMatchThisDay(nMatchAssign, currentDayToTry)) {
 											// System.out.println("Fits in " + currentDayToTry + " match "+ nMatchAssign + ", " + currentAssignment.matchTeamHome[nMatchAssign] + "-" + currentAssignment.matchTeamAway[nMatchAssign]);
@@ -481,11 +500,20 @@ public class ScheduleMoroccoAlg {
 				solutionsFound++;
 				// System.out.println("matchesAssignedPerDay="+Arrays.toString(currentAssignment.matchesAssignedPerDay));
 				if (solutionsFound % 1000000 == 1) {
-					System.out.println("================== FOUND SOLUTION " + solutionsFound + " ==================");
+					log.debug("================== FOUND SOLUTION {} ==================", solutionsFound);
 				}
 				bestAssignment = currentAssignment.makeCopy();
 				if (currentAssignment.teamsInGroup.length > 3) {
-					System.out.println("MAJ=" + bestAssignment.amountOfMAJ + ", extremeTeams=" + bestAssignment.amountTimesExtremeTeamsPlaySameDayOrTwoSeparate + ", DaysWith4Matches=" + bestAssignment.amountOfDaysWith4Matches + ", NotWeekendMatches=" + bestAssignment.amountOfNotWeekendMatches + ", MatchesOnMonday=" + bestAssignment.amountOfMatchesOnMonday + ", diffMidweek=" + bestAssignment.differenceTeamsMidweek + ", diffSatSun=" + bestAssignment.diffBetweenSatAndSun);
+					log.debug(
+						"MAJ={}, extremeTeams={}, DaysWith4Matches={}, NotWeekendMatches={}, MatchesOnMonday={}, diffMidweek={}, diffSatSun={}",
+						bestAssignment.amountOfMAJ,
+						bestAssignment.amountTimesExtremeTeamsPlaySameDayOrTwoSeparate,
+						bestAssignment.amountOfDaysWith4Matches,
+						bestAssignment.amountOfNotWeekendMatches,
+						bestAssignment.amountOfMatchesOnMonday,
+						bestAssignment.differenceTeamsMidweek,
+						bestAssignment.diffBetweenSatAndSun
+					);
 				}
 			}
 		}
@@ -498,7 +526,7 @@ public class ScheduleMoroccoAlg {
 		if (currentAssignment.nLastMatchNotAssigned < nMatchAssign) {
 			currentAssignment.nLastMatchNotAssigned = nMatchAssign;
 			currentAssignment.strLastMatchNotAssigned = homeTeam + "-" + awayTeam;
-			System.out.println("First time assigning " + nMatchAssign + " - " + currentAssignment.strLastMatchNotAssigned);
+			log.trace("First time assigning {} - {}", nMatchAssign, currentAssignment.strLastMatchNotAssigned);
 		}
 		// Find if the match is too close to another previous match that we've already assigned for the same team
 		int matchEnoughRestHome = currentAssignment.newMatchEnoughRest(homeTeam, currentDayToTry);
@@ -583,15 +611,15 @@ public class ScheduleMoroccoAlg {
 					// System.out.println("Backtracking match because there are too many matches on the same day");
 				}
 			} else {
-				System.out.println("Backtracking match " + nMatchAssign + " because of future MAJ");
+				log.trace("Backtracking match {} because of future MAJ", nMatchAssign);
 			}
 		}
 		return fitsInCalendarRound;
 	}
 	
 	public void copyBestMatchesToCalendar(int roundAssigning) {
-		System.out.println("Copying roundAssigning=" + roundAssigning);
-		System.out.println("Copying roundCalculationOrder[roundAssigning]=" + roundCalculationOrder[roundAssigning]);
+		log.trace("Copying roundAssigning={}", roundAssigning);
+		log.trace("Copying roundCalculationOrder[roundAssigning]={}", roundCalculationOrder[roundAssigning]);
 		for (int nMatchToCopy = 0; nMatchToCopy < bestAssignment.matchCodes.length; nMatchToCopy++) {
 			SchMatch newSchMatch = currentAssignment.theMatchSch[nMatchToCopy];
 			if (Integer.valueOf(newSchMatch.getCompetitionRound()) == roundCalculationOrder[roundAssigning]) {

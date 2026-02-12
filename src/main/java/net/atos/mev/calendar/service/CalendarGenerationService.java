@@ -50,7 +50,18 @@ public class CalendarGenerationService {
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(excelBytes)) {
             return scheduleFacade.run(finalProperties, inputStream);
         } catch (Exception exception) {
-            throw new IllegalStateException("Error loading excel file from storage", exception);
+            Throwable root = exception;
+            while (root.getCause() != null) {
+                root = root.getCause();
+            }
+            String rootMessage = root.getMessage() == null ? root.getClass().getSimpleName() : root.getMessage();
+            throw new IllegalStateException(
+                "Error generating calendar for competitionId " + competitionId
+                    + ", season " + season
+                    + ", excelFileName " + excelFileName
+                    + ". Root cause: " + rootMessage,
+                exception
+            );
         }
     }
 }
