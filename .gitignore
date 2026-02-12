@@ -49,8 +49,7 @@ buildNumber.properties
 
 ### Log file ###
 *.log
-*.csv
-
+ 
 ### BlueJ files ###
 *.ctxt
 
@@ -73,6 +72,4 @@ replay_pid*
 ### OS ###
 .DS_Store
 Thumbs.db
-results/
-results/**/**/**/summary*.xlsx
-results/**/**/**/*.cvs
+ 
