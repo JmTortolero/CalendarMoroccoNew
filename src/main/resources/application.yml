@@ -3,7 +3,8 @@ spring:
     name: calendarcalculator
   config:
     # Local order:
-    # 1) generated from Helm values (scripts/sync-local-config.sh)
+    # 1) generated from Helm values (recommended: ../helmMorocco/scripts/generate-properties-from-values.sh,
+    #    which internally calls sync-local-config.sh)
     # 2) legacy static local config
     # In Kubernetes, /config/application.yml from Helm (via SPRING_CONFIG_ADDITIONAL_LOCATION)
     # overrides this import.
