@@ -73,3 +73,16 @@ Los charts y scripts de Helm están separados en otro repositorio Git:
 - Chart principal: `../helmMorocco/charts/calendar-morocco-cli`
 
 Este repositorio (`backMorocco`) contiene solo backend Spring Boot.
+
+
+
+make lint OK para los 3 charts.
+helm template OK en dev y prod para backend/frontend/ingress.
+Render de ingress en prod confirma TLS (calendar-tls) y ruta / a calendar-frontend.
+Uso rápido
+
+make dev-up
+make dev-status
+make dev-port-forward PORT=8888
+
+
