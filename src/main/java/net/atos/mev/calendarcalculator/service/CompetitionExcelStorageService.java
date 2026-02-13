@@ -83,6 +83,7 @@ public class CompetitionExcelStorageService {
                 String season = extractSeasonFromDatesFile(datesFile);
                 if (season != null) {
                     Files.createDirectories(baseDirectory.resolve(storageDirectory).resolve(season));
+                    seedInitialExcelFromClasspath(competitionId, storageDirectory, season, datesFile);
                 }
             } catch (Exception exception) {
                 log.warn(
@@ -352,6 +353,10 @@ public class CompetitionExcelStorageService {
         }
 
         var competitionConfig = findCompetitionConfig(competitionId);
+        if (competitionConfig != null && StringUtils.hasText(competitionConfig.getStorageDir())) {
+            return sanitizeStorageDirectory(competitionConfig.getStorageDir()) + "/" + season;
+        }
+
         if (competitionConfig != null && competitionConfig.getFile() != null && competitionConfig.getFile().contains("/")) {
             int slashIndex = competitionConfig.getFile().lastIndexOf('/');
             if (slashIndex > 0) {
@@ -424,6 +429,56 @@ public class CompetitionExcelStorageService {
         }
 
         return segments[segments.length - 2];
+    }
+
+    private void seedInitialExcelFromClasspath(
+        String competitionId,
+        String storageDirectory,
+        String season,
+        String datesFile
+    ) {
+        if (!StringUtils.hasText(datesFile)) {
+            return;
+        }
+
+        String normalizedDatesFile = datesFile.replace('\\', '/');
+        int lastSlash = normalizedDatesFile.lastIndexOf('/');
+        if (lastSlash < 0 || lastSlash == normalizedDatesFile.length() - 1) {
+            return;
+        }
+
+        String fileName = normalizedDatesFile.substring(lastSlash + 1);
+        Path target = baseDirectory.resolve(storageDirectory).resolve(season).resolve(fileName).normalize();
+        ensurePathInsideBase(target);
+
+        if (Files.exists(target)) {
+            return;
+        }
+
+        Resource classpathResource = resourcePatternResolver.getResource("classpath:" + normalizedDatesFile);
+        if (!classpathResource.exists()) {
+            log.warn(
+                "Initial classpath excel not found for competitionId {}: {}",
+                competitionId,
+                normalizedDatesFile
+            );
+            return;
+        }
+
+        try {
+            Files.createDirectories(target.getParent());
+            try (InputStream inputStream = classpathResource.getInputStream()) {
+                Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+            log.info("Seeded initial excel from classpath for competitionId {} -> {}", competitionId, target);
+        } catch (IOException exception) {
+            log.warn(
+                "Cannot seed initial excel for competitionId {} from classpath {}. Cause: {}",
+                competitionId,
+                normalizedDatesFile,
+                exception.getMessage()
+            );
+        }
     }
 
     private CompetitionExcelFileDTO toExcelFileDTO(Path filePath) {

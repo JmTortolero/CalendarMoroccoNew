@@ -1,17 +1,68 @@
 spring:
   application:
     name: calendarcalculator
-  config:
-    # Local order:
-    # 1) generated from Helm values (recommended: ../helmMorocco/scripts/generate-properties-from-values.sh,
-    #    which internally calls sync-local-config.sh)
-    # 2) legacy static local config
-    # In Kubernetes, /config/application.yml from Helm (via SPRING_CONFIG_ADDITIONAL_LOCATION)
-    # overrides this import.
-    import: optional:file:./data/generated/application.yml,optional:file:./data/application.yml
 
 server:
   port: 8080
+
+calendar:
+  config:
+    # Optional external overrides. If files do not exist here,
+    # CompetitionPropertiesService falls back to classpath resources.
+    competitions-dir: ./data/competitions
+  storage:
+    base-dir: ./data/dataFiles
+  results:
+    base-dir: ./data/results
+  competitions:
+    BOTOLA_D1:
+      name: Botola Pro (1a Division)
+      file: schBotolaD1/SchMoroccoD1.properties
+      storage-dir: schBotolaD1
+      enabled: true
+      env: MoroccoDiv1.properties
+      start: "01/08/2025"
+      end: "01/07/2026"
+    BOTOLA_D2:
+      name: Botola 2 (2a Division)
+      file: schBotolaD2/SchMoroccoD2.properties
+      storage-dir: schBotolaD2
+      enabled: true
+      env: MoroccoDiv2v1.properties
+      start: "01/08/2025"
+      end: "01/07/2026"
+    CNPFF_D1:
+      name: CNPFF (1a Division Femenina)
+      file: schCNPFF1/MoroccoCNPFF1.properties
+      storage-dir: schCNPFF1
+      enabled: true
+      env: MoroccoFemDiv1.properties
+      start: "01/09/2025"
+      end: "26/08/2026"
+    CNPFF_D2:
+      name: CNPFF (2a Division Femenina)
+      file: schCNPFF2/MoroccoCNPFF2.properties
+      storage-dir: schCNPFF2
+      enabled: true
+      env: MoroccoFemDiv2.properties
+      start: "01/09/2025"
+      end: "26/08/2026"
+    CNPFF_D2N:
+      name: CNPFF (2a Division Femenina Norte)
+      file: schCNPFF2N/MoroccoCNPFF2N.properties
+      storage-dir: schCNPFF2N
+      enabled: true
+      env: MoroccoFemDiv2Nord.properties
+      start: "20/09/2024"
+      end: "30/06/2025"
+    CNPFF_D2S:
+      name: CNPFF (2a Division Femenina Sur)
+      file: schCNPFF2S/MoroccoCNPFF2S.properties
+      storage-dir: schCNPFF2S
+      enabled: true
+      env: MoroccoFemDiv2Sud.properties
+      start: "20/09/2024"
+      end: "30/06/2025"
 
 logging:
   level:

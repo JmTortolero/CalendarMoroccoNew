@@ -15,8 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import net.atos.mev.calendarcalculator.service.CompetitionCatalogService;
 import net.atos.mev.calendarcalculator.service.CompetitionPropertiesService;
+import net.atos.mev.calendarcalculator.service.SeasonCatalogService;
 import net.atos.mev.calendarcalculator.service.dto.CompetitionDTO;
 import net.atos.mev.calendarcalculator.service.dto.CompetitionRuntimeOverridesDTO;
+import net.atos.mev.calendarcalculator.service.dto.SeasonDTO;
 
 @RestController
 @RequestMapping("/api/config")
@@ -24,13 +26,16 @@ public class CompetitionController {
 
     private final CompetitionCatalogService competitionCatalogService;
     private final CompetitionPropertiesService competitionPropertiesService;
+    private final SeasonCatalogService seasonCatalogService;
 
     public CompetitionController(
         CompetitionCatalogService competitionCatalogService,
-        CompetitionPropertiesService competitionPropertiesService
+        CompetitionPropertiesService competitionPropertiesService,
+        SeasonCatalogService seasonCatalogService
     ) {
         this.competitionCatalogService = competitionCatalogService;
         this.competitionPropertiesService = competitionPropertiesService;
+        this.seasonCatalogService = seasonCatalogService;
     }
 
     @GetMapping("/competitions")
@@ -42,6 +47,11 @@ public class CompetitionController {
     public CompetitionDTO competitionById(@PathVariable String id) {
         return competitionCatalogService.getCompetitionById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Competition not found: " + id));
+    }
+
+    @GetMapping("/seasons")
+    public List<SeasonDTO> seasons() {
+        return seasonCatalogService.listSeasons();
     }
 
     @PostMapping("/competitions/{id}/resolve")
